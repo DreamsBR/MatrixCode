@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matriz API</title>
+</head>
+
+<body>
+    <h1>Matriz API Integración</h1>
+
+    <h2>Enviar Matriz</h2>
+    <textarea id="matrixInput" rows="4" cols="50">[[4, 0], [0, 2]]</textarea><br>
+    <button onclick="sendMatrix()">Enviar Matriz</button>
+
+    <h2>Resultado:</h2>
+    <pre id="result"></pre>
+
+    <script>
+        async function getToken() {
+            try {
+                const response = await fetch('http://localhost:8080/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const data = await response.json();
+                return data.token;
+            } catch (error) {
+                console.error('Error obteniendo token:', error);
+                return null;
+            }
+        }
+
+        async function sendMatrix() {
+            const token = await getToken();
+            if (!token) {
+                document.getElementById('result').textContent = 'Falló al obtener token.';
+                return;
+            }
+
+            const matrixInput = document.getElementById('matrixInput').value;
+            let matrix;
+            try {
+                matrix = JSON.parse(matrixInput);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error de formato en la matriz.';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/matrix', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ matrix })
+                });
+                const result = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                console.error('Error enviando matriz:', error);
+                document.getElementById('result').textContent = 'Falló al enviar la matriz.';
+            }
+        }
+    </script>
+</body>
+
+</html>
